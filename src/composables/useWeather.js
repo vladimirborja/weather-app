@@ -306,8 +306,8 @@ export function useWeather() {
         loading.value = false
         return
       } else {
-        // Return custom thematic warning in app's voice
-        error.value = `UNRESOLVED TRANSMISSION: The weather station at '${sanitizedCity}' did not respond. Check if the city name is spelled correctly (e.g. 'Manila', 'Batanes', 'Siargao', 'Baguio') or configure a valid VITE_OPENWEATHER_KEY in your .env file to enable live satellite queries.`
+        // City not in demo mode mock list
+        error.value = `We couldn't find "${sanitizedCity}" in demo mode. Try one of these: Manila, Batanes, Baguio, Siargao, Cebu, Tagaytay, or Davao.`
         loading.value = false
         return
       }
@@ -324,20 +324,20 @@ export function useWeather() {
       // Handle 401 Unauthorized API Key
       if (currentRes.status === 401) {
         isDemoMode.value = true
-        error.value = `TRANSMISSION UNAUTHORIZED: The satellite server rejected our connection key. Reverting to local terminal mode. Please verify the validity of VITE_OPENWEATHER_KEY in your .env file.`
+        error.value = `Your OpenWeather API key doesn't seem to be working. The app has switched to demo mode — check your VITE_OPENWEATHER_KEY in the .env file.`
         loading.value = false
         return
       }
 
       if (!currentRes.ok) {
-        throw new Error(`Archipelago directory lookup failed for station '${sanitizedCity}'.`)
+        throw new Error(`City not found`)
       }
 
       const weatherData = await currentRes.json()
       
       // Strictly enforce Philippine Area of Responsibility (PAR)
       if (weatherData.sys.country !== 'PH') {
-        error.value = `JURISDICTION EXCLUSION: '${sanitizedCity}' falls outside our tracking boundary. This monitoring terminal strictly tracks weather stations within the Philippine Area of Responsibility (PAR).`
+        error.value = `"${sanitizedCity}" doesn't appear to be in the Philippines. This app only covers Philippine cities — try Manila, Cebu, Davao, or Baguio.`
         loading.value = false
         return
       }
@@ -356,7 +356,7 @@ export function useWeather() {
       // Parse multi-day and hourly forecast
       parseForecasts(forecastData.list)
     } catch (e) {
-      error.value = `UNRESOLVED TRANSMISSION: ${e.message} Verify spelling or ensure the city name is in Tagalog/English directory listings.`
+      error.value = `We couldn't find "${sanitizedCity}". Double-check the spelling and try again.`
     } finally {
       loading.value = false
     }
