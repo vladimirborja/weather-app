@@ -5,6 +5,7 @@ defineProps({
   updatedAt:      { type: String, default: '' },
   animatedTemp:   { type: Number, default: 0 },
   weatherIcon:    { type: String, default: '' },
+  unit:           { type: String, default: '°C' },
 })
 </script>
 
@@ -19,7 +20,7 @@ defineProps({
       <p class="hero-condition">{{ conditionLabel }}</p>
       <div class="hero-temp">
         <span class="temp-number">{{ animatedTemp }}</span>
-        <span class="temp-unit">°C</span>
+        <span class="temp-unit">{{ unit }}</span>
       </div>
     </div>
 

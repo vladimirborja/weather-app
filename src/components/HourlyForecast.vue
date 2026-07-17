@@ -3,8 +3,9 @@ defineProps({
   items: { type: Array, default: () => [] },
 })
 
-function formatTime(dt_txt) {
-  return new Date(dt_txt).toLocaleTimeString('en-PH', { hour: 'numeric', hour12: true })
+// Use the UNIX timestamp (dt) directly to avoid timezone-ambiguous string parsing
+function formatTime(dt) {
+  return new Date(dt * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', hour12: true })
 }
 </script>
 
@@ -17,13 +18,14 @@ function formatTime(dt_txt) {
         :key="item.dt"
         class="hourly-item fade-up-item"
       >
-        <span class="hourly-time">{{ formatTime(item.dt_txt) }}</span>
+        <span class="hourly-time">{{ formatTime(item.dt) }}</span>
         <img
           :src="`https://openweathermap.org/img/wn/${item.icon}@2x.png`"
           :alt="item.description"
           class="hourly-icon"
         />
-        <span class="hourly-temp">{{ Math.round(item.temp) }}°</span>
+        <span class="hourly-temp">{{ item.displayTemp }}°</span>
+        <span v-if="item.pop > 10" class="hourly-pop">💧 {{ item.pop }}%</span>
       </div>
     </div>
   </div>
