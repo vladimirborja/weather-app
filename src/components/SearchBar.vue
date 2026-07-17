@@ -1,18 +1,40 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps({
+defineProps({
   isDemoMode: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['search'])
+const emit = defineEmits(['search', 'geolocate'])
 
-const query = ref('')
+const query      = ref('')
+const geoLoading = ref(false)
+const geoError   = ref('')
 
 function handleSubmit() {
   if (!query.value?.trim()) return
   emit('search', query.value.trim())
   query.value = ''
+}
+
+function handleGeolocate() {
+  if (!navigator.geolocation) {
+    geoError.value = 'Geolocation not supported by your browser.'
+    return
+  }
+  geoLoading.value = true
+  geoError.value   = ''
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      geoLoading.value = false
+      emit('geolocate', { lat: pos.coords.latitude, lon: pos.coords.longitude })
+    },
+    () => {
+      geoLoading.value = false
+      geoError.value   = 'Unable to detect your location.'
+    },
+    { timeout: 10000 }
+  )
 }
 </script>
 
@@ -29,7 +51,7 @@ function handleSubmit() {
           id="city-search"
           v-model="query"
           type="text"
-          placeholder="Search for cities..."
+          placeholder="Search Philippine cities..."
           class="search-input"
           autocomplete="off"
           @keydown.enter="handleSubmit"
@@ -41,6 +63,27 @@ function handleSubmit() {
         </button>
       </div>
     </form>
+
+    <!-- Geolocation button -->
+    <button
+      id="btn-geolocate"
+      class="geo-btn"
+      :class="{ 'geo-loading': geoLoading }"
+      :disabled="geoLoading"
+      :title="geoError || 'Use my location'"
+      aria-label="Detect my location"
+      @click="handleGeolocate"
+    >
+      <!-- Crosshair / GPS icon -->
+      <svg v-if="!geoLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+      </svg>
+      <!-- Spinner while locating -->
+      <svg v-else class="geo-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 2a10 10 0 0 1 10 10"/>
+      </svg>
+    </button>
 
     <div v-if="isDemoMode" class="demo-badge" title="No API key — showing demo data">
       <span>◉</span> Demo Mode

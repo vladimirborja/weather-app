@@ -146,6 +146,7 @@ export function useWeather() {
       dt: item.dt,
       dt_txt: item.dt_txt,
       temp: item.main.temp,
+      pop: Math.round((item.pop ?? 0) * 100),
       icon: item.weather[0].icon,
       description: item.weather[0].description
     }))
@@ -247,6 +248,16 @@ export function useWeather() {
         weatherConfig = i % 8 === 0 ? { main: 'Clouds', description: 'partly cloudy', icon: '02d' } : { main: 'Clear', description: 'clear sea sky', icon: '01d' }
       }
 
+      // Probability of precipitation based on weather type
+      let pop = 0
+      if (weatherConfig.main === 'Rain' || weatherConfig.main === 'Thunderstorm') {
+        pop = 0.65 + Math.random() * 0.35
+      } else if (weatherConfig.main === 'Clouds') {
+        pop = 0.15 + Math.random() * 0.2
+      } else {
+        pop = Math.random() * 0.1
+      }
+
       list.push({
         dt: Math.floor(timeMs / 1000),
         dt_txt,
@@ -259,7 +270,8 @@ export function useWeather() {
         weather: [weatherConfig],
         wind: {
           speed: cityKey === 'batanes' ? 30 - i * 0.4 : 5 + Math.random() * 3
-        }
+        },
+        pop
       })
     }
     
@@ -362,6 +374,92 @@ export function useWeather() {
     }
   }
 
+  // Search by GPS coordinates (geolocation)
+  async function searchByCoords(lat, lon) {
+    loading.value = true
+    error.value   = ''
+    weather.value = null
+    forecastHourly.value = []
+    forecastDaily.value  = []
+
+    if (!API_KEY || API_KEY.trim() === '' || API_KEY === 'undefined') {
+      isDemoMode.value = true
+      await new Promise(resolve => setTimeout(resolve, 1400))
+
+      // Find the nearest mock station using straight-line distance
+      const stationCoords = {
+        manila:   { lat: 14.5995, lon: 120.9842 },
+        batanes:  { lat: 20.4487, lon: 121.9686 },
+        baguio:   { lat: 16.4023, lon: 120.5960 },
+        siargao:  { lat:  9.7916, lon: 126.1610 },
+        cebu:     { lat: 10.3157, lon: 123.8854 },
+        tagaytay: { lat: 14.1153, lon: 120.9621 },
+        davao:    { lat:  7.1907, lon: 125.4553 }
+      }
+
+      let nearest = 'manila'
+      let minDist = Infinity
+      Object.entries(stationCoords).forEach(([key, coords]) => {
+        const d = Math.hypot(lat - coords.lat, lon - coords.lon)
+        if (d < minDist) { minDist = d; nearest = key }
+      })
+
+      const station     = MOCK_STATIONS[nearest]
+      const stationCopy = JSON.parse(JSON.stringify(station))
+      stationCopy.warning = {
+        tcws:    calculateTCWS(stationCopy.weather.wind.speed),
+        rainfall: calculateRainfallWarning(
+          stationCopy.weather.weather[0].description,
+          stationCopy.weather.weather[0].id
+        )
+      }
+      weather.value         = stationCopy.weather
+      weather.value.warning = stationCopy.warning
+      const mockList = generateMockForecast(nearest, stationCopy.weather.main.temp)
+      parseForecasts(mockList)
+      loading.value = false
+      return
+    }
+
+    isDemoMode.value = false
+    try {
+      const [currentRes, forecastRes] = await Promise.all([
+        fetch(`${BASE}/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`),
+        fetch(`${BASE}/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`)
+      ])
+
+      if (currentRes.status === 401) {
+        isDemoMode.value = true
+        error.value = `Your OpenWeather API key doesn't seem to be working. The app has switched to demo mode.`
+        loading.value = false
+        return
+      }
+
+      if (!currentRes.ok) throw new Error('Location not found')
+
+      const weatherData = await currentRes.json()
+
+      if (weatherData.sys.country !== 'PH') {
+        error.value = `Your current location doesn't appear to be in the Philippines. This app only covers Philippine cities.`
+        loading.value = false
+        return
+      }
+
+      const forecastData = await forecastRes.json()
+      const warning = {
+        tcws:    calculateTCWS(weatherData.wind.speed),
+        rainfall: calculateRainfallWarning(weatherData.weather[0].description, weatherData.weather[0].id)
+      }
+      weatherData.warning = warning
+      weather.value = weatherData
+      parseForecasts(forecastData.list)
+    } catch (e) {
+      error.value = `Couldn't get weather for your location. Try searching a city manually.`
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     weather,
     forecastHourly,
@@ -369,6 +467,7 @@ export function useWeather() {
     loading,
     error,
     isDemoMode,
-    search
+    search,
+    searchByCoords
   }
 }
