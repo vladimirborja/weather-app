@@ -33,6 +33,7 @@ body  { margin: 0; padding: 0; }
   --blob-3:         rgba(88,28,135,0.18);
 
   /* Base shell */
+  --color-jade:     #2dd4bf;
   min-height: 100vh;
   width: 100%;
   background: var(--bg-primary);
@@ -517,3 +518,83 @@ body  { margin: 0; padding: 0; }
   .sidebar          { display: none; }
   .main-panel       { padding: 16px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SEARCH ROW (wrapper for SearchBar + unit toggle)
+═══════════════════════════════════════════════════════════════ */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Let search-area grow to fill the row */
+.search-row .search-area { flex: 1; }
+
+/* ─── Geolocation button ─────────────────────────────────────── */
+.geo-btn {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  backdrop-filter: blur(12px);
+}
+.geo-btn svg { width: 18px; height: 18px; }
+.geo-btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.geo-btn.geo-loading { opacity: 0.55; cursor: not-allowed; }
+.geo-spin { animation: spin 0.9s linear infinite; }
+
+/* ─── Unit toggle (°C / °F) ──────────────────────────────────── */
+.unit-toggle {
+  flex-shrink: 0;
+  height: 48px; min-width: 54px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 14px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  backdrop-filter: blur(12px);
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+.unit-toggle:hover,
+.unit-toggle.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ─── Precipitation badge on hourly items ────────────────────── */
+.hourly-pop {
+  font-size: 10px;
+  font-weight: 700;
+  color: #60a5fa;
+  letter-spacing: 0.01em;
+  margin-top: -2px;
+}
+
+/* ─── Condition sub-label (e.g. wind gust) ───────────────────── */
+.condition-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 3px 0 0;
+}
+
+/* ─── Radar section inside forecast panel ────────────────────── */
+.radar-section {
+  padding: 0 4px;
+  margin-bottom: 4px;
+}
+.forecast-header-spaced { margin-top: 20px; }
