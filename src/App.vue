@@ -49,7 +49,7 @@ function handleSearch(city) {
   if (!city?.trim()) return
   searchedCity.value = city.trim()
   search(city.trim())
-  // Switch to weather view when a city is searched from any view
+  // Switch to weather view when a city is searched from any views
   activeView.value = 'weather'
 }
 
