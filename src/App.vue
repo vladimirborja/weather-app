@@ -12,6 +12,9 @@ import HourlyForecast from './components/HourlyForecast.vue'
 import AirConditions  from './components/AirConditions.vue'
 import EmptyState     from './components/EmptyState.vue'
 import ForecastPanel  from './components/ForecastPanel.vue'
+import CitiesView     from './components/CitiesView.vue'
+import WindView       from './components/WindView.vue'
+import SettingsView   from './components/SettingsView.vue'
 
 const {
   weather,
@@ -27,8 +30,13 @@ const {
 const animatedTemp  = ref(0)
 const searchedCity  = ref('')
 const useFahrenheit = ref(false)
+const activeView    = ref('weather')
 
 const QUICK_CITIES = ['Manila', 'Batanes', 'Baguio', 'Siargao', 'Cebu', 'Tagaytay', 'Davao']
+
+function handleNavChange(view) {
+  activeView.value = view
+}
 
 // ── Unit conversion ──────────────────────────────────────────────
 function convertTemp(c) {
@@ -41,6 +49,8 @@ function handleSearch(city) {
   if (!city?.trim()) return
   searchedCity.value = city.trim()
   search(city.trim())
+  // Switch to weather view when a city is searched from any view
+  activeView.value = 'weather'
 }
 
 function handleGeolocate({ lat, lon }) {
@@ -201,12 +211,14 @@ const weatherDisplay = computed(() => {
         :isRainy="isRainy"
         :isSunny="isSunny"
         :hasWeather="!!weather"
+        :activeView="activeView"
+        @nav-change="handleNavChange"
       />
 
       <!-- Main panel -->
       <main class="main-panel">
 
-        <!-- Search row: search bar + geo btn (inside SearchBar) + unit toggle -->
+        <!-- Search row: always visible -->
         <div class="search-row">
           <SearchBar
             :isDemoMode="isDemoMode"
@@ -224,38 +236,64 @@ const weatherDisplay = computed(() => {
           </button>
         </div>
 
-        <LoadingState v-if="loading" :weatherEmoji="weatherEmoji" :searchedCity="searchedCity" />
+        <!-- ── Cities view ── -->
+        <CitiesView
+          v-if="activeView === 'cities'"
+          :quickCities="QUICK_CITIES"
+          :weather="weather"
+          @search="handleSearch"
+        />
 
-        <ErrorCard v-else-if="error" :searchedCity="searchedCity" />
+        <!-- ── Wind view ── -->
+        <WindView
+          v-else-if="activeView === 'wind'"
+          :weather="weather"
+          :windLabel="windLabel"
+        />
 
-        <template v-else-if="weather">
-          <WarningStrip v-if="tcws || rainfall" :tcws="tcws" :rainfall="rainfall" />
+        <!-- ── Settings view ── -->
+        <SettingsView
+          v-else-if="activeView === 'settings'"
+          :useFahrenheit="useFahrenheit"
+          :isDemoMode="isDemoMode"
+          @toggle-unit="useFahrenheit = !useFahrenheit"
+        />
 
-          <HeroCard
-            :cityName="weather.name"
-            :conditionLabel="conditionLabel"
-            :updatedAt="updatedAt"
-            :animatedTemp="displayTemp"
-            :weatherIcon="weatherIcon"
-            :unit="tempUnit"
-          />
+        <!-- ── Weather view (default) ── -->
+        <template v-else>
+          <LoadingState v-if="loading" :weatherEmoji="weatherEmoji" :searchedCity="searchedCity" />
 
-          <HourlyForecast :items="forecastHourlyDisplay" />
+          <ErrorCard v-else-if="error" :searchedCity="searchedCity" />
 
-          <AirConditions
-            :feelsLike="feelsLike"
-            :windLabel="windLabel"
-            :humidity="humidity"
-            :pressure="pressure"
-            :sunrise="sunrise"
-            :sunset="sunset"
-            :visibility="visibility"
-            :windGust="windGust"
-            :unit="tempUnit"
-          />
+          <template v-else-if="weather">
+            <WarningStrip v-if="tcws || rainfall" :tcws="tcws" :rainfall="rainfall" />
+
+            <HeroCard
+              :cityName="weather.name"
+              :conditionLabel="conditionLabel"
+              :updatedAt="updatedAt"
+              :animatedTemp="displayTemp"
+              :weatherIcon="weatherIcon"
+              :unit="tempUnit"
+            />
+
+            <HourlyForecast :items="forecastHourlyDisplay" />
+
+            <AirConditions
+              :feelsLike="feelsLike"
+              :windLabel="windLabel"
+              :humidity="humidity"
+              :pressure="pressure"
+              :sunrise="sunrise"
+              :sunset="sunset"
+              :visibility="visibility"
+              :windGust="windGust"
+              :unit="tempUnit"
+            />
+          </template>
+
+          <EmptyState v-else :quickCities="QUICK_CITIES" @search="handleSearch" />
         </template>
-
-        <EmptyState v-else :quickCities="QUICK_CITIES" @search="handleSearch" />
 
       </main>
 
