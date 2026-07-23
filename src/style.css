@@ -592,13 +592,6 @@ body  { margin: 0; padding: 0; }
   margin: 3px 0 0;
 }
 
-/* ─── Radar section inside forecast panel ────────────────────── */
-.radar-section {
-  padding: 0 4px;
-  margin-bottom: 4px;
-}
-.forecast-header-spaced { margin-top: 20px; }
-
 /* ═══════════════════════════════════════════════════════════════
    CITIES VIEW
 ═══════════════════════════════════════════════════════════════ */

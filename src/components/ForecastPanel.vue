@@ -1,6 +1,4 @@
 <script setup>
-import WeatherRadar from './WeatherRadar.vue'
-
 defineProps({
   loading:       { type: Boolean, default: false },
   weather:       { type: Object,  default: null  },
@@ -12,14 +10,8 @@ defineProps({
 <template>
   <aside class="forecast-panel">
 
-    <!-- Radar section (shown when weather is loaded) -->
-    <div v-if="weather" class="radar-section">
-      <p class="forecast-title" style="margin-bottom: 12px">RADAR</p>
-      <WeatherRadar :weather="weather" :isDemoMode="isDemoMode" />
-    </div>
-
     <!-- 5-day forecast header -->
-    <div class="forecast-header" :class="{ 'forecast-header-spaced': weather }">
+    <div class="forecast-header">
       <p class="forecast-title">5-DAY FORECAST</p>
     </div>
 
