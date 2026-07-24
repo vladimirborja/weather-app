@@ -864,3 +864,60 @@ body  { margin: 0; padding: 0; }
 }
 .about-logo { font-size: 28px; flex-shrink: 0; }
 
+/* ═══════════════════════════════════════════════════════════════
+   DAILY ADVISOR
+═══════════════════════════════════════════════════════════════ */
+.advisor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.advisor-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+  backdrop-filter: blur(8px);
+}
+.advisor-item:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-glow);
+  transform: translateY(-2px);
+}
+.advisor-icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.advisor-emoji { font-size: 22px; line-height: 1; }
+
+.outfit-theme {
+  background: rgba(99, 102, 241, 0.15); /* Soft Indigo */
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+.gear-theme {
+  background: rgba(236, 72, 153, 0.15); /* Soft Pink */
+  border: 1px solid rgba(236, 72, 153, 0.25);
+}
+.activity-theme {
+  background: rgba(16, 185, 129, 0.15); /* Soft Green */
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.advisor-content { flex: 1; }
+.advisor-item-title {
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary); margin: 0 0 4px;
+}
+.advisor-item-text {
+  font-size: 12px; color: var(--text-secondary);
+  line-height: 1.5; margin: 0;
+}
+
+

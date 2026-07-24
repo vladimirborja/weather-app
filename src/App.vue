@@ -15,6 +15,7 @@ import ForecastPanel  from './components/ForecastPanel.vue'
 import CitiesView     from './components/CitiesView.vue'
 import WindView       from './components/WindView.vue'
 import SettingsView   from './components/SettingsView.vue'
+import WeatherAdvisor from './components/WeatherAdvisor.vue'
 
 const {
   weather,
@@ -278,6 +279,12 @@ const weatherDisplay = computed(() => {
             />
 
             <HourlyForecast :items="forecastHourlyDisplay" />
+
+            <WeatherAdvisor
+              :weather="weather"
+              :forecastHourly="forecastHourly"
+              :useFahrenheit="useFahrenheit"
+            />
 
             <AirConditions
               :feelsLike="feelsLike"
