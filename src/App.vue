@@ -33,7 +33,16 @@ const searchedCity  = ref('')
 const useFahrenheit = ref(false)
 const activeView    = ref('weather')
 
-const QUICK_CITIES = ['Manila', 'Batanes', 'Baguio', 'Siargao', 'Cebu', 'Tagaytay', 'Davao']
+const QUICK_CITIES = [
+  'Manila', 'Quezon City', 'Makati',       // Metro Manila
+  'Baguio', 'Tagaytay', 'Antipolo',        // Highlands / CALABARZON
+  'Batanes', 'Laoag', 'Tuguegarao',        // North Luzon
+  'Cebu', 'Iloilo', 'Bacolod', 'Dumaguete', // Visayas
+  'Tacloban', 'Legazpi',                   // Eastern/Bicol
+  'Davao', 'Cagayan de Oro', 'General Santos', // Mindanao
+  'Zamboanga', 'Siargao', 'Boracay',       // Islands
+  'Puerto Princesa', 'Butuan',             // Palawan / Caraga
+]
 
 function handleNavChange(view) {
   activeView.value = view
