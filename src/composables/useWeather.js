@@ -518,6 +518,36 @@ export function useWeather() {
   const loading        = ref(false)
   const error          = ref('')
   const isDemoMode     = ref(false)
+  const uvIndex        = ref(null)
+
+  // ── UV Index helpers ────────────────────────────────────────────────────────
+  // Estimate UV for demo mode based on weather condition + time of day
+  function estimateDemoUV(weatherId, lat) {
+    const hour = new Date().getHours()
+    // Night/early morning → UV 0
+    if (hour < 6 || hour > 19) return 0
+    // Peak solar hours → higher base
+    const solarFactor = hour >= 10 && hour <= 15 ? 1.0 : 0.55
+    // Equatorial latitude boost (Philippines ~5–20°N)
+    const latFactor = Math.max(0.6, 1 - Math.abs((lat ?? 12) - 5) / 40)
+    let base = 8 * solarFactor * latFactor
+    // Clouds / rain reduce UV
+    if (weatherId >= 200 && weatherId < 700) base *= 0.2  // rain/storm
+    else if (weatherId >= 800 && weatherId < 804) base *= (weatherId === 800 ? 1 : 0.6)
+    return Math.round(Math.min(11, Math.max(0, base)))
+  }
+
+  // Fetch real UV from OpenWeatherMap (free /uvi endpoint)
+  async function fetchLiveUV(lat, lon) {
+    try {
+      const res = await fetch(`${BASE}/uvi?lat=${lat}&lon=${lon}&appid=${API_KEY}`)
+      if (!res.ok) return
+      const data = await res.json()
+      uvIndex.value = typeof data.value === 'number' ? Math.round(data.value) : null
+    } catch {
+      uvIndex.value = null
+    }
+  }
 
   // ── PAGASA TCWS ────────────────────────────────────────────────────────────
   function calculateTCWS(windSpeedMetersPerSecond) {
@@ -641,6 +671,7 @@ export function useWeather() {
         weather.value = result.weatherData
         const mockList = generateMockForecast(result.cityEntry, result.weatherData.main.temp)
         parseForecasts(mockList)
+        uvIndex.value = estimateDemoUV(result.weatherData.weather[0].id, result.cityEntry?.lat)
       } else {
         error.value = `"${sanitizedCity}" wasn't found. Try any Philippine city — Manila, Cebu, Davao, Baguio, Iloilo, Zamboanga, and more.`
       }
@@ -676,6 +707,8 @@ export function useWeather() {
       }
       weather.value = weatherData
       parseForecasts(forecastData.list)
+      // Fetch UV index in background (non-blocking)
+      fetchLiveUV(weatherData.coord.lat, weatherData.coord.lon)
     } catch {
       error.value = `We couldn't find "${sanitizedCity}". Check the spelling and try again.`
     } finally {
@@ -711,6 +744,7 @@ export function useWeather() {
         weather.value = weatherData
         const mockList = generateMockForecast(nearest, weatherData.main.temp)
         parseForecasts(mockList)
+        uvIndex.value = estimateDemoUV(weatherData.weather[0].id, nearest.lat)
       }
       loading.value = false
       return
@@ -743,6 +777,7 @@ export function useWeather() {
       }
       weather.value = weatherData
       parseForecasts(forecastData.list)
+      fetchLiveUV(lat, lon)
     } catch {
       error.value = `Couldn't get weather for your location. Try searching a city manually.`
     } finally {
@@ -750,5 +785,5 @@ export function useWeather() {
     }
   }
 
-  return { weather, forecastHourly, forecastDaily, loading, error, isDemoMode, search, searchByCoords }
+  return { weather, forecastHourly, forecastDaily, loading, error, isDemoMode, uvIndex, search, searchByCoords }
 }

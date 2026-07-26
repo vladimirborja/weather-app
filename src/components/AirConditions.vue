@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   feelsLike:  { type: [Number, String], default: '--' },
   windLabel:  { type: String,           default: '--' },
   humidity:   { type: [Number, String], default: '--' },
@@ -9,6 +11,17 @@ defineProps({
   visibility: { type: [Number, String], default: '--' },
   windGust:   { type: String,           default: ''   },
   unit:       { type: String,           default: '°C' },
+  uvIndex:    { type: [Number, String], default: null  },
+})
+
+const uvInfo = computed(() => {
+  const uv = Number(props.uvIndex)
+  if (props.uvIndex === null || isNaN(uv)) return null
+  if (uv <= 2)  return { label: 'Low',       color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)',   emoji: '😎' }
+  if (uv <= 5)  return { label: 'Moderate',  color: '#eab308', bg: 'rgba(234,179,8,0.12)',   border: 'rgba(234,179,8,0.25)',   emoji: '🕶️' }
+  if (uv <= 7)  return { label: 'High',      color: '#f97316', bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.25)',  emoji: '🧴' }
+  if (uv <= 10) return { label: 'Very High', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.25)',   emoji: '⛱️' }
+  return             { label: 'Extreme',     color: '#a855f7', bg: 'rgba(168,85,247,0.12)',  border: 'rgba(168,85,247,0.25)',  emoji: '🚫' }
 })
 </script>
 
@@ -53,6 +66,18 @@ defineProps({
         <div>
           <p class="condition-label">Pressure</p>
           <p class="condition-value">{{ pressure }} hPa</p>
+        </div>
+      </div>
+
+      <!-- UV Index -->
+      <div v-if="uvInfo" class="condition-item uv-item" :style="{ background: uvInfo.bg, border: `1px solid ${uvInfo.border}` }">
+        <div class="condition-icon">{{ uvInfo.emoji }}</div>
+        <div>
+          <p class="condition-label">UV Index</p>
+          <p class="condition-value" :style="{ color: uvInfo.color }">
+            {{ Math.round(Number(uvIndex)) }}
+            <span class="uv-label">{{ uvInfo.label }}</span>
+          </p>
         </div>
       </div>
 
