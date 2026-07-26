@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useWeather } from './composables/useWeather'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useWeather }    from './composables/useWeather'
+import { useFavourites } from './composables/useFavourites'
 
 import AppSidebar     from './components/AppSidebar.vue'
+import MobileNav      from './components/MobileNav.vue'
 import SearchBar      from './components/SearchBar.vue'
 import LoadingState   from './components/LoadingState.vue'
 import ErrorCard      from './components/ErrorCard.vue'
@@ -16,6 +18,7 @@ import CitiesView     from './components/CitiesView.vue'
 import WindView       from './components/WindView.vue'
 import SettingsView   from './components/SettingsView.vue'
 import WeatherAdvisor from './components/WeatherAdvisor.vue'
+import FavouritesView from './components/FavouritesView.vue'
 
 const {
   weather,
@@ -24,51 +27,118 @@ const {
   loading,
   error,
   isDemoMode,
+  uvIndex,
   search,
   searchByCoords
 } = useWeather()
 
-const animatedTemp  = ref(0)
-const searchedCity  = ref('')
-const useFahrenheit = ref(false)
-const activeView    = ref('weather')
+const { isFavourite, toggleFavourite, addRecent } = useFavourites()
 
+const animatedTemp   = ref(0)
+const searchedCity   = ref('')
+const useFahrenheit  = ref(false)
+const activeView     = ref('weather')
+const lastSearchArgs = ref(null)   // for auto-refresh
+const refreshTimer   = ref(null)
+
+// ── City name list for autocomplete (extracted from PH_CITIES in useWeather)
+// We expose display names by using a small inline list of all distinct cities
+// These are the same cities the composable knows about
 const QUICK_CITIES = [
-  'Manila', 'Quezon City', 'Makati',       // Metro Manila
-  'Baguio', 'Tagaytay', 'Antipolo',        // Highlands / CALABARZON
-  'Batanes', 'Laoag', 'Tuguegarao',        // North Luzon
-  'Cebu', 'Iloilo', 'Bacolod', 'Dumaguete', // Visayas
-  'Tacloban', 'Legazpi',                   // Eastern/Bicol
-  'Davao', 'Cagayan de Oro', 'General Santos', // Mindanao
-  'Zamboanga', 'Siargao', 'Boracay',       // Islands
-  'Puerto Princesa', 'Butuan',             // Palawan / Caraga
+  'Manila', 'Quezon City', 'Makati',
+  'Baguio', 'Tagaytay', 'Antipolo',
+  'Batanes', 'Laoag', 'Tuguegarao',
+  'Cebu', 'Iloilo', 'Bacolod', 'Dumaguete',
+  'Tacloban', 'Legazpi',
+  'Davao', 'Cagayan de Oro', 'General Santos',
+  'Zamboanga', 'Siargao', 'Boracay',
+  'Puerto Princesa', 'Butuan',
+]
+
+// Full PH city name list for autocomplete dropdown
+const PH_CITY_NAMES = [
+  'Manila', 'Quezon City', 'Caloocan', 'Las Piñas', 'Makati', 'Malabon',
+  'Mandaluyong', 'Marikina', 'Muntinlupa', 'Navotas', 'Parañaque', 'Pasay',
+  'Pasig', 'San Juan', 'Taguig', 'Valenzuela',
+  'Laoag', 'Batac', 'Vigan', 'San Fernando', 'Dagupan', 'Urdaneta',
+  'Tuguegarao', 'Ilagan', 'Cauayan', 'Santiago',
+  'Baguio City', 'Tabuk', 'La Trinidad', 'Sagada',
+  'Batanes', 'Basco',
+  'Angeles', 'Olongapo', 'Malolos', 'Cabanatuan', 'Tarlac City',
+  'Antipolo', 'Bacoor', 'Batangas City', 'Cavite City', 'Dasmariñas',
+  'Imus', 'Lipa', 'Lucena', 'San Pablo', 'Santa Rosa', 'Tagaytay',
+  'Puerto Princesa', 'Calapan', 'Coron', 'El Nido',
+  'Legazpi City', 'Naga City', 'Sorsogon City',
+  'Iloilo City', 'Bacolod', 'Roxas City', 'Boracay',
+  'Cebu City', 'Lapu-Lapu', 'Mandaue', 'Dumaguete', 'Tagbilaran',
+  'Tacloban', 'Ormoc', 'Catbalogan',
+  'Zamboanga City', 'Pagadian', 'Dipolog',
+  'Cagayan de Oro', 'Iligan', 'Ozamiz', 'Gingoog',
+  'Davao City', 'Tagum', 'Mati', 'Digos',
+  'General Santos', 'Cotabato City', 'Kidapawan', 'Koronadal',
+  'Butuan', 'Surigao City', 'Bislig',
+  'Marawi City', 'Siargao', 'Palawan', 'Camiguin', 'Subic Bay',
 ]
 
 function handleNavChange(view) {
   activeView.value = view
 }
 
-// ── Unit conversion ──────────────────────────────────────────────
+// ── Unit conversion ───────────────────────────────────────────
 function convertTemp(c) {
   return useFahrenheit.value ? Math.round(c * 9 / 5 + 32) : Math.round(c)
 }
 const tempUnit = computed(() => useFahrenheit.value ? '°F' : '°C')
 
-// ── Search handlers ──────────────────────────────────────────────
+// ── Search handlers ───────────────────────────────────────────
 function handleSearch(city) {
   if (!city?.trim()) return
-  searchedCity.value = city.trim()
-  search(city.trim())
-  // Switch to weather view when a city is searched from any views
+  const trimmed = city.trim()
+  searchedCity.value = trimmed
+  search(trimmed)
+  addRecent(trimmed)
   activeView.value = 'weather'
+  // Remember for auto-refresh
+  lastSearchArgs.value = { type: 'city', value: trimmed }
+  resetRefreshTimer()
 }
 
 function handleGeolocate({ lat, lon }) {
   searchedCity.value = 'your location'
   searchByCoords(lat, lon)
+  lastSearchArgs.value = { type: 'coords', lat, lon }
+  resetRefreshTimer()
 }
 
-// Smooth count-up animation on temp change (always in °C internally)
+// ── Auto-refresh every 10 minutes ────────────────────────────
+const REFRESH_INTERVAL = 10 * 60 * 1000
+
+function resetRefreshTimer() {
+  if (refreshTimer.value) clearInterval(refreshTimer.value)
+  refreshTimer.value = setInterval(() => {
+    if (!lastSearchArgs.value) return
+    if (lastSearchArgs.value.type === 'city') {
+      search(lastSearchArgs.value.value)
+    } else {
+      searchByCoords(lastSearchArgs.value.lat, lastSearchArgs.value.lon)
+    }
+  }, REFRESH_INTERVAL)
+}
+
+onUnmounted(() => {
+  if (refreshTimer.value) clearInterval(refreshTimer.value)
+})
+
+// ── Favourite toggle ──────────────────────────────────────────
+const currentIsFavourite = computed(() =>
+  weather.value ? isFavourite(weather.value.name) : false
+)
+
+function handleToggleFavourite() {
+  if (weather.value) toggleFavourite(weather.value.name)
+}
+
+// ── Animated temp counter ─────────────────────────────────────
 watch(weather, (w) => {
   if (!w) { animatedTemp.value = 0; return }
   const target = Math.round(w.main.temp)
@@ -83,7 +153,7 @@ watch(weather, (w) => {
   requestAnimationFrame(tick)
 })
 
-// ── Theme / visual computed ──────────────────────────────────────
+// ── Theme / visual computed ───────────────────────────────────
 const weatherIcon = computed(() =>
   weather.value
     ? `https://openweathermap.org/img/wn/${weather.value.weather[0].icon}@4x.png`
@@ -121,7 +191,7 @@ const weatherEmoji = computed(() => {
   return '☁️'
 })
 
-// ── Weather data computed ────────────────────────────────────────
+// ── Weather data computed ─────────────────────────────────────
 const windLabel = computed(() => {
   if (!weather.value?.wind) return '--'
   const { speed, deg } = weather.value.wind
@@ -142,16 +212,13 @@ const pressure       = computed(() => weather.value?.main?.pressure ?? '--')
 const tcws           = computed(() => weather.value?.warning?.tcws ?? null)
 const rainfall       = computed(() => weather.value?.warning?.rainfall ?? null)
 
-// ── Unit-converted values ────────────────────────────────────────
-// displayTemp: animated °C value converted to selected unit
+// ── Unit-converted values ─────────────────────────────────────
 const displayTemp = computed(() => convertTemp(animatedTemp.value))
 
-// feelsLike in selected unit
 const feelsLike = computed(() =>
   weather.value ? convertTemp(weather.value.main.feels_like) : '--'
 )
 
-// Sunrise / Sunset from API timestamps
 const sunrise = computed(() => {
   if (!weather.value?.sys?.sunrise) return '--'
   return new Date(weather.value.sys.sunrise * 1000)
@@ -163,19 +230,16 @@ const sunset = computed(() => {
     .toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true })
 })
 
-// Visibility (metres → km)
 const visibility = computed(() => {
   if (!weather.value?.visibility) return '--'
   return (weather.value.visibility / 1000).toFixed(1)
 })
 
-// Wind gust (optional — not always in API response)
 const windGust = computed(() => {
   if (!weather.value?.wind?.gust) return ''
   return `${weather.value.wind.gust.toFixed(1)} m/s`
 })
 
-// Pre-converted hourly forecast (so child component stays presentation-only)
 const forecastHourlyDisplay = computed(() =>
   forecastHourly.value.map(item => ({
     ...item,
@@ -183,7 +247,6 @@ const forecastHourlyDisplay = computed(() =>
   }))
 )
 
-// Pre-converted daily forecast
 const forecastDailyDisplay = computed(() =>
   forecastDaily.value.map(d => ({
     ...d,
@@ -192,7 +255,6 @@ const forecastDailyDisplay = computed(() =>
   }))
 )
 
-// Weather object with pre-converted temps for ForecastPanel's "today" row
 const weatherDisplay = computed(() => {
   if (!weather.value) return null
   return {
@@ -215,7 +277,7 @@ const weatherDisplay = computed(() => {
 
     <div class="dashboard-layout">
 
-      <!-- Sidebar -->
+      <!-- Sidebar (desktop) -->
       <AppSidebar
         :weatherEmoji="weatherEmoji"
         :isRainy="isRainy"
@@ -230,11 +292,42 @@ const weatherDisplay = computed(() => {
 
         <!-- Search row: always visible -->
         <div class="search-row">
+          <!-- Back button (when not on weather view) -->
+          <button
+            v-if="activeView !== 'weather'"
+            id="btn-back"
+            class="back-btn"
+            aria-label="Back to weather"
+            @click="activeView = 'weather'"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back
+          </button>
+
           <SearchBar
             :isDemoMode="isDemoMode"
+            :cityNames="PH_CITY_NAMES"
             @search="handleSearch"
             @geolocate="handleGeolocate"
           />
+
+          <!-- Favourite toggle (only when weather is loaded and on weather view) -->
+          <button
+            v-if="weather && activeView === 'weather'"
+            id="btn-favourite"
+            class="fav-toggle-btn"
+            :class="{ 'fav-toggle-btn--active': currentIsFavourite }"
+            :aria-label="currentIsFavourite ? 'Remove from favourites' : 'Add to favourites'"
+            :title="currentIsFavourite ? 'Remove from favourites' : 'Save city'"
+            @click="handleToggleFavourite"
+          >
+            <svg viewBox="0 0 24 24" :fill="currentIsFavourite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+
           <button
             id="btn-unit-toggle"
             class="unit-toggle"
@@ -246,70 +339,86 @@ const weatherDisplay = computed(() => {
           </button>
         </div>
 
-        <!-- ── Cities view ── -->
-        <CitiesView
-          v-if="activeView === 'cities'"
-          :quickCities="QUICK_CITIES"
-          :weather="weather"
-          @search="handleSearch"
-        />
+        <!-- ── View transitions ── -->
+        <Transition name="view-slide" mode="out-in">
 
-        <!-- ── Wind view ── -->
-        <WindView
-          v-else-if="activeView === 'wind'"
-          :weather="weather"
-          :windLabel="windLabel"
-        />
+          <!-- ── Favourites view ── -->
+          <FavouritesView
+            v-if="activeView === 'favourites'"
+            key="favourites"
+            @search="handleSearch"
+          />
 
-        <!-- ── Settings view ── -->
-        <SettingsView
-          v-else-if="activeView === 'settings'"
-          :useFahrenheit="useFahrenheit"
-          :isDemoMode="isDemoMode"
-          @toggle-unit="useFahrenheit = !useFahrenheit"
-        />
+          <!-- ── Cities view ── -->
+          <CitiesView
+            v-else-if="activeView === 'cities'"
+            key="cities"
+            :quickCities="QUICK_CITIES"
+            :weather="weather"
+            @search="handleSearch"
+          />
 
-        <!-- ── Weather view (default) ── -->
-        <template v-else>
-          <LoadingState v-if="loading" :weatherEmoji="weatherEmoji" :searchedCity="searchedCity" />
+          <!-- ── Wind view ── -->
+          <WindView
+            v-else-if="activeView === 'wind'"
+            key="wind"
+            :weather="weather"
+            :windLabel="windLabel"
+          />
 
-          <ErrorCard v-else-if="error" :searchedCity="searchedCity" />
+          <!-- ── Settings view ── -->
+          <SettingsView
+            v-else-if="activeView === 'settings'"
+            key="settings"
+            :useFahrenheit="useFahrenheit"
+            :isDemoMode="isDemoMode"
+            @toggle-unit="useFahrenheit = !useFahrenheit"
+          />
 
-          <template v-else-if="weather">
-            <WarningStrip v-if="tcws || rainfall" :tcws="tcws" :rainfall="rainfall" />
+          <!-- ── Weather view (default) ── -->
+          <div v-else key="weather" class="weather-view-wrapper">
+            <LoadingState v-if="loading" :weatherEmoji="weatherEmoji" :searchedCity="searchedCity" />
 
-            <HeroCard
-              :cityName="weather.name"
-              :conditionLabel="conditionLabel"
-              :updatedAt="updatedAt"
-              :animatedTemp="displayTemp"
-              :weatherIcon="weatherIcon"
-              :unit="tempUnit"
-            />
+            <ErrorCard v-else-if="error" :searchedCity="searchedCity" />
 
-            <HourlyForecast :items="forecastHourlyDisplay" />
+            <template v-else-if="weather">
+              <WarningStrip v-if="tcws || rainfall" :tcws="tcws" :rainfall="rainfall" />
 
-            <WeatherAdvisor
-              :weather="weather"
-              :forecastHourly="forecastHourly"
-              :useFahrenheit="useFahrenheit"
-            />
+              <HeroCard
+                :cityName="weather.name"
+                :conditionLabel="conditionLabel"
+                :updatedAt="updatedAt"
+                :animatedTemp="displayTemp"
+                :weatherIcon="weatherIcon"
+                :unit="tempUnit"
+              />
 
-            <AirConditions
-              :feelsLike="feelsLike"
-              :windLabel="windLabel"
-              :humidity="humidity"
-              :pressure="pressure"
-              :sunrise="sunrise"
-              :sunset="sunset"
-              :visibility="visibility"
-              :windGust="windGust"
-              :unit="tempUnit"
-            />
-          </template>
+              <HourlyForecast :items="forecastHourlyDisplay" />
 
-          <EmptyState v-else :quickCities="QUICK_CITIES" @search="handleSearch" />
-        </template>
+              <WeatherAdvisor
+                :weather="weather"
+                :forecastHourly="forecastHourly"
+                :useFahrenheit="useFahrenheit"
+              />
+
+              <AirConditions
+                :feelsLike="feelsLike"
+                :windLabel="windLabel"
+                :humidity="humidity"
+                :pressure="pressure"
+                :sunrise="sunrise"
+                :sunset="sunset"
+                :visibility="visibility"
+                :windGust="windGust"
+                :unit="tempUnit"
+                :uvIndex="uvIndex"
+              />
+            </template>
+
+            <EmptyState v-else :quickCities="QUICK_CITIES" @search="handleSearch" />
+          </div>
+
+        </Transition>
 
       </main>
 
@@ -322,5 +431,12 @@ const weatherDisplay = computed(() => {
       />
 
     </div>
+
+    <!-- Mobile bottom nav -->
+    <MobileNav
+      :activeView="activeView"
+      :weatherEmoji="weatherEmoji"
+      @nav-change="handleNavChange"
+    />
   </div>
 </template>
