@@ -1080,8 +1080,17 @@ body  { margin: 0; padding: 0; }
 .fav-city-info { flex: 1; }
 .fav-city-name { font-size: 15px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 2px; }
 .fav-city-sub  { font-size: 11px; color: var(--text-muted); }
-.fav-city-arrow { color: var(--text-muted); }
-.fav-city-main:hover .fav-city-arrow { color: var(--accent); }
+.fav-city-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  transition: color 0.2s, transform 0.2s;
+}
+.fav-city-main:hover .fav-city-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
 
 .fav-remove-btn {
   flex-shrink: 0;
