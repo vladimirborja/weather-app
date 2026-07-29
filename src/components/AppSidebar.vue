@@ -12,8 +12,8 @@ const emit = defineEmits(['nav-change'])
 <template>
   <aside class="sidebar">
     <!-- Logo -->
-    <div class="sidebar-logo">
-      <div class="logo-icon">
+    <div class="">
+      <div class="">
         <span>{{ weatherEmoji }}</span>
       </div>
     </div>
