@@ -168,6 +168,15 @@ body  { margin: 0; padding: 0; }
   color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent-glow);
 }
+/* Home button — pulsing accent ring when user is on a searched city */
+.nav-btn--home-active {
+  color: var(--accent);
+  animation: home-pulse 2s ease-in-out infinite;
+}
+@keyframes home-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   var(--accent-glow); }
+  50%       { box-shadow: 0 0 0 4px var(--accent-glow); }
+}
 .sidebar-theme-badge {
   margin-top: 16px;
   width: 32px; height: 32px;
@@ -302,6 +311,31 @@ body  { margin: 0; padding: 0; }
   margin: 0; line-height: 1.1;
   font-family: 'Space Grotesk', sans-serif;
 }
+/* Row that wraps back-arrow + city name */
+.hero-city-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Back arrow button inside the hero card */
+.hero-back-btn {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  padding: 0;
+}
+.hero-back-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: translateX(-2px);
+}
+.hero-back-btn:active { transform: translateX(-4px) scale(0.95); }
 .hero-condition {
   font-size: 13px; color: var(--text-secondary);
   text-transform: capitalize; margin: 2px 0 12px;

@@ -41,6 +41,20 @@ const activeView     = ref('weather')
 const lastSearchArgs = ref(null)   // for auto-refresh
 const refreshTimer   = ref(null)
 
+// ── Home location — saved on first geolocation or set to Manila fallback ──
+const homeLocation   = ref(null)  // { type: 'coords', lat, lon } | { type: 'city', value: string }
+
+// True when user is viewing a manually searched city (not home)
+const isSearchedCity = computed(() => {
+  if (!homeLocation.value || !lastSearchArgs.value) return false
+  const home = homeLocation.value
+  const cur  = lastSearchArgs.value
+  if (home.type !== cur.type) return true
+  if (home.type === 'city')   return home.value !== cur.value
+  // coords: consider "home" if within ~1km (0.009 degrees)
+  return Math.abs(home.lat - cur.lat) > 0.009 || Math.abs(home.lon - cur.lon) > 0.009
+})
+
 // ── City name list for autocomplete (extracted from PH_CITIES in useWeather)
 // We expose display names by using a small inline list of all distinct cities
 // These are the same cities the composable knows about
@@ -100,6 +114,8 @@ function handleSearch(city) {
   activeView.value = 'weather'
   // Remember for auto-refresh
   lastSearchArgs.value = { type: 'city', value: trimmed }
+  // Set home only once (first search if no home is set yet)
+  if (!homeLocation.value) homeLocation.value = { type: 'city', value: trimmed }
   resetRefreshTimer()
 }
 
@@ -107,7 +123,32 @@ function handleGeolocate({ lat, lon }) {
   searchedCity.value = 'your location'
   searchByCoords(lat, lon)
   lastSearchArgs.value = { type: 'coords', lat, lon }
+  // Geolocation always becomes the home reference
+  homeLocation.value = { type: 'coords', lat, lon }
   resetRefreshTimer()
+}
+
+// ── Go home: restore default/GPS location ────────────────────────────────
+function goHome() {
+  if (homeLocation.value) {
+    const home = homeLocation.value
+    if (home.type === 'coords') {
+      handleGeolocate({ lat: home.lat, lon: home.lon })
+    } else {
+      handleSearch(home.value)
+    }
+  } else {
+    // No home set yet — re-trigger GPS, fall back to Manila
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => handleGeolocate({ lat: coords.latitude, lon: coords.longitude }),
+        ()           => handleSearch('Manila')
+      )
+    } else {
+      handleSearch('Manila')
+    }
+  }
+  activeView.value = 'weather'
 }
 
 // ── Auto-refresh every 10 minutes ────────────────────────────
@@ -284,7 +325,9 @@ const weatherDisplay = computed(() => {
         :isSunny="isSunny"
         :hasWeather="!!weather"
         :activeView="activeView"
+        :isSearchedCity="isSearchedCity"
         @nav-change="handleNavChange"
+        @go-home="goHome"
       />
 
       <!-- Main panel -->
@@ -391,6 +434,8 @@ const weatherDisplay = computed(() => {
                 :animatedTemp="displayTemp"
                 :weatherIcon="weatherIcon"
                 :unit="tempUnit"
+                :showBack="isSearchedCity"
+                @go-home="goHome"
               />
 
               <HourlyForecast :items="forecastHourlyDisplay" />

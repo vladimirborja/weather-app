@@ -5,8 +5,9 @@ defineProps({
   isSunny:      { type: Boolean, default: false },
   hasWeather:   { type: Boolean, default: false },
   activeView:   { type: String, default: 'weather' },
+  isSearchedCity: { type: Boolean, default: false },
 })
-const emit = defineEmits(['nav-change'])
+const emit = defineEmits(['nav-change', 'go-home'])
 </script>
 
 <template>
@@ -31,6 +32,20 @@ const emit = defineEmits(['nav-change'])
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
           <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </button>
+      <!-- Home / default-location button -->
+      <button
+        class="nav-btn"
+        :class="{ 'nav-btn--home-active': isSearchedCity }"
+        id="nav-home"
+        aria-label="Home location"
+        title="Go to home location"
+        @click="emit('go-home')"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       </button>
       <button

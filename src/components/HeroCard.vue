@@ -6,7 +6,9 @@ defineProps({
   animatedTemp:   { type: Number, default: 0 },
   weatherIcon:    { type: String, default: '' },
   unit:           { type: String, default: '°C' },
+  showBack:       { type: Boolean, default: false },
 })
+const emit = defineEmits(['go-home'])
 </script>
 
 <template>
@@ -16,7 +18,21 @@ defineProps({
         <span class="hero-country">Philippines</span>
         <span class="hero-updated">Updated {{ updatedAt }}</span>
       </div>
-      <h1 class="hero-city">{{ cityName }}</h1>
+      <div class="hero-city-row">
+        <button
+          v-if="showBack"
+          class="hero-back-btn"
+          aria-label="Back to home location"
+          title="Back to home location"
+          @click="emit('go-home')"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <h1 class="hero-city">{{ cityName }}</h1>
+      </div>
       <p class="hero-condition">{{ conditionLabel }}</p>
       <div class="hero-temp">
         <span class="temp-number">{{ animatedTemp }}</span>
