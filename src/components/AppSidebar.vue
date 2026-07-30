@@ -12,21 +12,25 @@ const emit = defineEmits(['nav-change', 'go-home'])
 
 <template>
   <aside class="sidebar">
-    <!-- Logo -->
-    <div class="">
-      <div class="">
+
+    <!-- ── Logo ── -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">
         <span>{{ weatherEmoji }}</span>
       </div>
     </div>
 
-    <!-- Nav Icons -->
+    <!-- ── Divider ── -->
+    <div class="sidebar-divider" aria-hidden="true"></div>
+
+    <!-- ── Top nav group ── -->
     <nav class="sidebar-nav" aria-label="Main navigation">
       <button
         class="nav-btn"
         :class="{ active: activeView === 'weather' }"
         id="nav-weather"
         aria-label="Weather"
-        title="Weather"
+        data-tooltip="Weather"
         @click="emit('nav-change', 'weather')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -34,13 +38,14 @@ const emit = defineEmits(['nav-change', 'go-home'])
           <circle cx="12" cy="12" r="4"/>
         </svg>
       </button>
+
       <!-- Home / default-location button -->
       <button
         class="nav-btn"
         :class="{ 'nav-btn--home-active': isSearchedCity }"
         id="nav-home"
         aria-label="Home location"
-        title="Go to home location"
+        data-tooltip="Home"
         @click="emit('go-home')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -48,49 +53,57 @@ const emit = defineEmits(['nav-change', 'go-home'])
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       </button>
+
       <button
         class="nav-btn"
         :class="{ active: activeView === 'favourites' }"
         id="nav-favourites"
         aria-label="Favourites"
-        title="My Places"
+        data-tooltip="My Places"
         @click="emit('nav-change', 'favourites')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
+
       <button
         class="nav-btn"
         :class="{ active: activeView === 'cities' }"
         id="nav-cities"
         aria-label="Cities"
-        title="Cities"
+        data-tooltip="Cities"
         @click="emit('nav-change', 'cities')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
+          <rect x="2" y="7" width="6" height="14" rx="1"/>
+          <rect x="9" y="3" width="6" height="18" rx="1"/>
+          <rect x="16" y="10" width="6" height="11" rx="1"/>
         </svg>
       </button>
+
       <button
         class="nav-btn"
         :class="{ active: activeView === 'wind' }"
         id="nav-wind"
         aria-label="Wind"
-        title="Wind"
+        data-tooltip="Wind"
         @click="emit('nav-change', 'wind')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.59 4.59A2 2 0 1011 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/>
         </svg>
       </button>
+
+      <!-- Spacer: pushes settings to the bottom -->
+      <div class="sidebar-spacer"></div>
+
       <button
         class="nav-btn"
         :class="{ active: activeView === 'settings' }"
         id="nav-settings"
         aria-label="Settings"
-        title="Settings"
+        data-tooltip="Settings"
         @click="emit('nav-change', 'settings')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
