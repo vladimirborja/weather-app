@@ -218,18 +218,18 @@ const themeClass = computed(() => {
   return 'theme-cloudy'
 })
 
-const weatherEmoji = computed(() => {
-  if (!weather.value) return '🌤️'
+const weatherIconId = computed(() => {
+  if (!weather.value) return 'partly-cloudy'
   const id = weather.value.weather[0].id
-  if (id >= 200 && id <= 232) return '⛈️'
-  if (id >= 300 && id <= 321) return '🌦️'
-  if (id >= 500 && id <= 531) return '🌧️'
-  if (id >= 600 && id <= 622) return '❄️'
-  if (id >= 700 && id <= 781) return '🌫️'
-  if (id === 800)              return '☀️'
-  if (id === 801)              return '🌤️'
-  if (id === 802)              return '⛅'
-  return '☁️'
+  if (id >= 200 && id <= 232) return 'storm'
+  if (id >= 300 && id <= 321) return 'drizzle'
+  if (id >= 500 && id <= 531) return 'rain'
+  if (id >= 600 && id <= 622) return 'snow'
+  if (id >= 700 && id <= 781) return 'fog'
+  if (id === 800)              return 'sun'
+  if (id === 801)              return 'partly-cloudy'
+  if (id === 802)              return 'cloudy'
+  return 'cloudy'
 })
 
 // ── Weather data computed ─────────────────────────────────────
@@ -320,7 +320,7 @@ const weatherDisplay = computed(() => {
 
       <!-- Sidebar (desktop) -->
       <AppSidebar
-        :weatherEmoji="weatherEmoji"
+        :weatherIconId="weatherIconId"
         :isRainy="isRainy"
         :isSunny="isSunny"
         :hasWeather="!!weather"
@@ -420,7 +420,7 @@ const weatherDisplay = computed(() => {
 
           <!-- ── Weather view (default) ── -->
           <div v-else key="weather" class="weather-view-wrapper">
-            <LoadingState v-if="loading" :weatherEmoji="weatherEmoji" :searchedCity="searchedCity" />
+            <LoadingState v-if="loading" :weatherIconId="weatherIconId" :searchedCity="searchedCity" />
 
             <ErrorCard v-else-if="error" :searchedCity="searchedCity" />
 
@@ -480,7 +480,6 @@ const weatherDisplay = computed(() => {
     <!-- Mobile bottom nav -->
     <MobileNav
       :activeView="activeView"
-      :weatherEmoji="weatherEmoji"
       @nav-change="handleNavChange"
     />
   </div>
