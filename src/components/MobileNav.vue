@@ -1,7 +1,6 @@
 <script setup>
 defineProps({
-  activeView:   { type: String, default: 'weather' },
-  weatherEmoji: { type: String, default: '🌤️' },
+  activeView: { type: String, default: 'weather' },
 })
 const emit = defineEmits(['nav-change'])
 </script>
