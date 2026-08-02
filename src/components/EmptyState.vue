@@ -9,7 +9,10 @@ const emit = defineEmits(['search'])
 <template>
   <div class="empty-state">
     <div class="empty-orb">
-      <span class="empty-emoji">🏝️</span>
+      <span class="empty-emoji">
+        <!-- Compass icon: represents searching/locating a place -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </span>
     </div>
     <h2 class="empty-title">Where's the weather today?</h2>
     <p class="empty-sub">

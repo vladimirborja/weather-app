@@ -18,7 +18,9 @@ const emit = defineEmits(['toggle-unit'])
       <p class="settings-section-label">Temperature Unit</p>
       <div class="settings-unit-row">
         <div class="settings-unit-info">
-          <span class="settings-unit-icon">🌡️</span>
+          <span class="settings-unit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
+          </span>
           <div>
             <p class="settings-item-title">Display Unit</p>
             <p class="settings-item-desc">Currently showing in {{ useFahrenheit ? 'Fahrenheit (°F)' : 'Celsius (°C)' }}</p>
@@ -65,7 +67,9 @@ const emit = defineEmits(['toggle-unit'])
     <div class="settings-section">
       <p class="settings-section-label">About</p>
       <div class="settings-about-card">
-        <div class="about-logo">🌤️</div>
+        <div class="about-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 22v-2"/><circle cx="12" cy="12" r="4"/><path d="M16.5 9.5A4.5 4.5 0 0121 14a4.5 4.5 0 01-4.5 4.5H9a3 3 0 010-6 4 4 0 017.5-3z"/></svg>
+        </div>
         <div>
           <p class="settings-item-title">PH Weather Dashboard</p>
           <p class="settings-item-desc">Real-time Philippine weather with PAGASA-style typhoon and rainfall warnings.</p>

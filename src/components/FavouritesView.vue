@@ -4,20 +4,6 @@ import { useFavourites } from '../composables/useFavourites'
 const emit = defineEmits(['search'])
 const { savedCities, recentSearches, removeFavourite, clearRecent } = useFavourites()
 
-const regionEmojis = {
-  'Metro Manila': '🏙️', 'CAR': '🌲', 'Region I': '🌾', 'Region II': '🌊',
-  'Region III': '🏔️', 'CALABARZON': '🌋', 'MIMAROPA': '🏝️', 'Region V': '🌁',
-  'Region VI': '🍚', 'Region VII': '🏄', 'Region VIII': '🌀', 'Region IX': '🌊',
-  'Region X': '🌿', 'Region XI': '🦅', 'Region XII': '🌺', 'Region XIII': '🌊',
-  'BARMM': '🕌',
-}
-
-function getEmoji(city) {
-  const emojis = ['🌤️','🌦️','⛅','🌞','🌧️','🌈','🏙️','🌃']
-  const idx = city.charCodeAt(0) % emojis.length
-  return emojis[idx]
-}
-
 function selectCity(city) {
   emit('search', city)
 }
@@ -47,7 +33,10 @@ function selectCity(city) {
           class="fav-city-card"
         >
           <button class="fav-city-main" @click="selectCity(city)">
-            <span class="fav-city-emoji">{{ getEmoji(city) }}</span>
+            <span class="fav-city-emoji">
+              <!-- Map pin icon for all saved cities -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
             <div class="fav-city-info">
               <span class="fav-city-name">{{ city }}</span>
               <span class="fav-city-sub">Philippines</span>
@@ -65,9 +54,12 @@ function selectCity(city) {
       </div>
 
       <div v-else class="fav-empty">
-        <div class="fav-empty-icon">💔</div>
+        <div class="fav-empty-icon">
+          <!-- Broken heart SVG -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/><path d="M12 5.67l-1.5 4 3-1-1.5 4"/></svg>
+        </div>
         <p>No saved cities yet.</p>
-        <p class="fav-empty-hint">Search for a city and tap the ♡ button to save it here.</p>
+        <p class="fav-empty-hint">Search for a city and tap the heart button to save it here.</p>
       </div>
     </section>
 
