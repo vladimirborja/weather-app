@@ -25,7 +25,10 @@ function formatTime(dt) {
           class="hourly-icon"
         />
         <span class="hourly-temp">{{ item.displayTemp }}°</span>
-        <span v-if="item.pop > 10" class="hourly-pop">💧 {{ item.pop }}%</span>
+        <span v-if="item.pop > 10" class="hourly-pop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+          {{ item.pop }}%
+        </span>
       </div>
     </div>
   </div>

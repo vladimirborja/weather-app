@@ -73,28 +73,40 @@ const barPercent = computed(() => Math.min(100, (beaufort.value.num / 12) * 100)
       <!-- Speed cards -->
       <div class="wind-stats">
         <div class="wind-stat-card">
-          <span class="wsc-icon">💨</span>
+          <span class="wsc-icon">
+            <!-- Wind speed icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1011 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></svg>
+          </span>
           <div>
             <p class="wsc-label">Wind Speed</p>
             <p class="wsc-value">{{ windSpeed.toFixed(1) }} <span class="wsc-unit">m/s</span></p>
           </div>
         </div>
         <div class="wind-stat-card">
-          <span class="wsc-icon">🚀</span>
+          <span class="wsc-icon">
+            <!-- Gauge icon (km/h) -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
           <div>
             <p class="wsc-label">Speed (km/h)</p>
             <p class="wsc-value">{{ speedKmh }} <span class="wsc-unit">km/h</span></p>
           </div>
         </div>
         <div class="wind-stat-card">
-          <span class="wsc-icon">⚓</span>
+          <span class="wsc-icon">
+            <!-- Anchor icon (knots) -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg>
+          </span>
           <div>
             <p class="wsc-label">Speed (knots)</p>
             <p class="wsc-value">{{ speedKnots }} <span class="wsc-unit">kn</span></p>
           </div>
         </div>
         <div class="wind-stat-card" v-if="windGust">
-          <span class="wsc-icon">⚡</span>
+          <span class="wsc-icon">
+            <!-- Zap / lightning icon (gust) -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </span>
           <div>
             <p class="wsc-label">Wind Gust</p>
             <p class="wsc-value">{{ windGust.toFixed(1) }} <span class="wsc-unit">m/s</span></p>
@@ -123,7 +135,10 @@ const barPercent = computed(() => Math.min(100, (beaufort.value.num / 12) * 100)
 
     <!-- Empty state -->
     <div v-else class="wind-empty">
-      <div class="wind-empty-icon">💨</div>
+      <div class="wind-empty-icon">
+        <!-- Wind icon (empty state) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1011 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></svg>
+      </div>
       <p>No wind data available.<br>Search a Philippine city above.</p>
     </div>
   </div>
